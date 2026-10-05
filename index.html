@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Studio Rx</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap"
+            rel="stylesheet"
+        />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+        <style>
+            :root {
+                --bg: #f6f3ee;
+                --panel: #ffffff;
+                --ink: #2b2a27;
+                --muted: #77736b;
+                --line: #e6e0d6;
+                --sage: #5f7a63;
+                --sage-soft: #e5ece3;
+                --clay: #b8694a;
+                --clay-soft: #f5e6de;
+                --user-bubble: #2f3b31;
+                --user-ink: #f6f3ee;
+            }
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+            body {
+                font-family: "Inter", system-ui, sans-serif;
+                background: var(--bg);
+                color: var(--ink);
+                height: 100vh;
+                display: grid;
+                grid-template-columns: 320px 1fr;
+            }
+
+            /* ---------- sidebar ---------- */
+            aside {
+                background: var(--sage-soft);
+                border-right: 1px solid var(--line);
+                padding: 2rem 1.5rem;
+                overflow-y: auto;
+                display: flex;
+                flex-direction: column;
+                gap: 1.75rem;
+            }
+            .brand h1 {
+                font-family: "Fraunces", serif;
+                font-weight: 600;
+                font-size: 2rem;
+                letter-spacing: -0.01em;
+            }
+            .brand h1 span {
+                color: var(--clay);
+            }
+            .brand p {
+                margin-top: 0.5rem;
+                color: var(--muted);
+                font-size: 0.9rem;
+                line-height: 1.5;
+            }
+            aside h2 {
+                font-size: 0.7rem;
+                text-transform: uppercase;
+                letter-spacing: 0.08em;
+                color: var(--sage);
+                margin-bottom: 0.6rem;
+            }
+            .tool-list {
+                list-style: none;
+                display: flex;
+                flex-direction: column;
+                gap: 0.6rem;
+            }
+            .tool-list li {
+                background: var(--panel);
+                border-radius: 10px;
+                padding: 0.7rem 0.8rem;
+                font-size: 0.82rem;
+                line-height: 1.4;
+                color: var(--muted);
+            }
+            .tool-list strong {
+                display: block;
+                color: var(--ink);
+                font-weight: 600;
+                margin-bottom: 0.15rem;
+            }
+            .examples {
+                display: flex;
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .examples button {
+                text-align: left;
+                background: transparent;
+                border: 1px solid var(--sage);
+                color: var(--ink);
+                border-radius: 10px;
+                padding: 0.6rem 0.75rem;
+                font: inherit;
+                font-size: 0.82rem;
+                line-height: 1.4;
+                cursor: pointer;
+            }
+            .examples button:hover {
+                background: var(--panel);
+            }
+            .disclaimer {
+                font-size: 0.75rem;
+                line-height: 1.5;
+                color: var(--muted);
+                border-top: 1px solid var(--line);
+                padding-top: 1rem;
+                margin-top: auto;
+            }
+
+            /* ---------- chat ---------- */
+            main {
+                display: flex;
+                flex-direction: column;
+                min-height: 0;
+            }
+            header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 1rem 2rem;
+                border-bottom: 1px solid var(--line);
+                background: var(--panel);
+            }
+            header .status {
+                font-size: 0.85rem;
+                color: var(--muted);
+            }
+            #new-session {
+                background: transparent;
+                border: 1px solid var(--line);
+                border-radius: 999px;
+                padding: 0.4rem 0.9rem;
+                font: inherit;
+                font-size: 0.8rem;
+                cursor: pointer;
+                color: var(--ink);
+            }
+            #new-session:hover {
+                border-color: var(--clay);
+                color: var(--clay);
+            }
+            #messages {
+                flex: 1;
+                overflow-y: auto;
+                padding: 2rem;
+                display: flex;
+                flex-direction: column;
+                gap: 1.25rem;
+            }
+            .empty {
+                margin: auto;
+                text-align: center;
+                max-width: 420px;
+                color: var(--muted);
+                line-height: 1.6;
+            }
+            .empty .mark {
+                font-family: "Fraunces", serif;
+                font-size: 2.5rem;
+                color: var(--clay);
+            }
+            .msg {
+                max-width: 75%;
+                line-height: 1.55;
+                font-size: 0.95rem;
+            }
+            .msg.user {
+                align-self: flex-end;
+                background: var(--user-bubble);
+                color: var(--user-ink);
+                padding: 0.75rem 1rem;
+                border-radius: 16px 16px 4px 16px;
+                white-space: pre-wrap;
+            }
+            .msg.assistant {
+                align-self: flex-start;
+                background: var(--panel);
+                border: 1px solid var(--line);
+                padding: 0.9rem 1.1rem;
+                border-radius: 16px 16px 16px 4px;
+            }
+            .msg.assistant.loading {
+                color: var(--muted);
+                font-style: italic;
+            }
+            .msg.assistant p + p,
+            .msg.assistant ul,
+            .msg.assistant ol,
+            .msg.assistant h3 {
+                margin-top: 0.5rem;
+            }
+            .msg.assistant ul,
+            .msg.assistant ol {
+                padding-left: 1.25rem;
+            }
+            .msg.assistant h1,
+            .msg.assistant h2,
+            .msg.assistant h3 {
+                font-family: "Fraunces", serif;
+                font-size: 1.05rem;
+            }
+
+            /* ---------- tool calls ---------- */
+            .tool {
+                align-self: flex-start;
+                max-width: 75%;
+                background: var(--clay-soft);
+                border-left: 3px solid var(--clay);
+                border-radius: 6px;
+                font-size: 0.8rem;
+            }
+            .tool summary {
+                cursor: pointer;
+                padding: 0.5rem 0.8rem;
+                list-style: none;
+                color: var(--ink);
+            }
+            .tool summary::before {
+                content: "▸ ";
+                color: var(--clay);
+            }
+            .tool[open] summary::before {
+                content: "▾ ";
+            }
+            .tool .tool-name {
+                font-family: ui-monospace, monospace;
+                font-weight: 600;
+            }
+            .tool .tool-args {
+                font-family: ui-monospace, monospace;
+                color: var(--muted);
+            }
+            .tool pre {
+                font-family: ui-monospace, monospace;
+                font-size: 0.75rem;
+                white-space: pre-wrap;
+                word-break: break-word;
+                padding: 0 0.8rem 0.7rem;
+                max-height: 320px;
+                overflow-y: auto;
+                color: #4a3f39;
+            }
+
+            /* ---------- input ---------- */
+            #input-area {
+                display: flex;
+                gap: 0.75rem;
+                padding: 1rem 2rem 1.5rem;
+                background: var(--bg);
+            }
+            #user-input {
+                flex: 1;
+                padding: 0.85rem 1rem;
+                border: 1px solid var(--line);
+                border-radius: 12px;
+                font: inherit;
+                font-size: 0.95rem;
+                background: var(--panel);
+                outline: none;
+            }
+            #user-input:focus {
+                border-color: var(--sage);
+            }
+            #send-btn {
+                padding: 0 1.4rem;
+                background: var(--sage);
+                color: #fff;
+                border: none;
+                border-radius: 12px;
+                font: inherit;
+                font-weight: 600;
+                cursor: pointer;
+            }
+            #send-btn:disabled {
+                opacity: 0.4;
+                cursor: default;
+            }
+
+            @media (max-width: 800px) {
+                body {
+                    display: block;
+                    height: auto;
+                }
+                aside {
+                    border-right: none;
+                    border-bottom: 1px solid var(--line);
+                    padding: 1.5rem 1rem;
+                }
+                .tool-list {
+                    display: none;
+                }
+                main {
+                    height: 100vh;
+                }
+                header,
+                #messages,
+                #input-area {
+                    padding-left: 1rem;
+                    padding-right: 1rem;
+                }
+                .msg,
+                .tool {
+                    max-width: 92%;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <aside>
+            <div class="brand">
+                <h1>Studio <span>Rx</span></h1>
+                <p>
+                    A planning assistant for Pilates instructors. Tell it about
+                    a client's medications and conditions, and it checks FDA drug
+                    labels for exercise cautions, builds a safe class plan, and
+                    suggests modifications.
+                </p>
+            </div>
+
+            <section>
+                <h2>What it can do</h2>
+                <ul class="tool-list">
+                    <li>
+                        <strong>Check a medication</strong>
+                        Reads the FDA label and flags what matters in class:
+                        dizziness, slowed heart rate, tendon or bone risks.
+                    </li>
+                    <li>
+                        <strong>Build a class plan</strong>
+                        Sequences warm-up, main work, and cool-down for the
+                        time, level, and equipment, without exercises that
+                        conflict with the client's conditions.
+                    </li>
+                    <li>
+                        <strong>Modify an exercise</strong>
+                        Regressions, props, and progressions for a specific
+                        exercise and reason.
+                    </li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>Try asking</h2>
+                <div class="examples">
+                    <button>My client takes metoprolol. Anything I should watch for in class?</button>
+                    <button>Plan a 45-minute beginner mat class for a client with osteopenia who takes prednisone.</button>
+                    <button>The Hundred bothers her neck. What can she do instead?</button>
+                </div>
+            </section>
+
+            <p class="disclaimer">
+                Studio Rx is a teaching aid, not medical advice. Discuss
+                medication concerns with the client's healthcare provider.
+            </p>
+        </aside>
+
+        <main>
+            <header>
+                <span class="status" id="status">New session</span>
+                <button id="new-session">New client session</button>
+            </header>
+            <div id="messages">
+                <div class="empty" id="empty">
+                    <div class="mark">✦</div>
+                    <p>
+                        Describe your client (their medications, conditions, and
+                        the class you're teaching) or pick an example on the left.
+                    </p>
+                </div>
+            </div>
+            <div id="input-area">
+                <input
+                    type="text"
+                    id="user-input"
+                    placeholder="e.g. My 62-year-old client takes lisinopril and has knee pain…"
+                    autocomplete="off"
+                />
+                <button id="send-btn">Send</button>
+            </div>
+        </main>
+
+        <script>
+            const messages = document.getElementById("messages");
+            const userInput = document.getElementById("user-input");
+            const sendBtn = document.getElementById("send-btn");
+            const statusEl = document.getElementById("status");
+            let sessionId = null;
+
+            // Model answers are Markdown. Render them if the libraries loaded,
+            // otherwise fall back to plain text.
+            function setAnswer(el, text) {
+                if (window.marked && window.DOMPurify) {
+                    el.innerHTML = DOMPurify.sanitize(marked.parse(text));
+                } else {
+                    el.textContent = text;
+                }
+            }
+
+            function addMessage(role, text, isLoading = false) {
+                document.getElementById("empty")?.remove();
+                const div = document.createElement("div");
+                div.className = "msg " + role + (isLoading ? " loading" : "");
+                div.textContent = text;
+                messages.appendChild(div);
+                messages.scrollTop = messages.scrollHeight;
+                return div;
+            }
+
+            function prettyResult(result) {
+                try {
+                    return JSON.stringify(JSON.parse(result), null, 2);
+                } catch {
+                    return String(result);
+                }
+            }
+
+            function addToolCall(call, before) {
+                const details = document.createElement("details");
+                details.className = "tool";
+                const summary = document.createElement("summary");
+                const name = document.createElement("span");
+                name.className = "tool-name";
+                name.textContent = call.name;
+                const args = document.createElement("span");
+                args.className = "tool-args";
+                args.textContent =
+                    "(" + (typeof call.args === "string" ? call.args : JSON.stringify(call.args)) + ")";
+                summary.append(name, args);
+                const pre = document.createElement("pre");
+                pre.textContent = prettyResult(call.result);
+                details.append(summary, pre);
+                messages.insertBefore(details, before);
+            }
+
+            async function send(textOverride) {
+                const text = (textOverride ?? userInput.value).trim();
+                if (!text || sendBtn.disabled) return;
+
+                userInput.value = "";
+                sendBtn.disabled = true;
+                addMessage("user", text);
+                const loading = addMessage("assistant", "Checking…", true);
+
+                try {
+                    const res = await fetch("/chat", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ message: text, session_id: sessionId }),
+                    });
+                    if (!res.ok) throw new Error("Server returned " + res.status);
+                    const data = await res.json();
+                    sessionId = data.session_id;
+                    statusEl.textContent = "Session " + sessionId.slice(0, 8);
+
+                    // Show each tool the harness ran, above the assistant's answer
+                    for (const call of data.tool_calls || []) addToolCall(call, loading);
+                    loading.classList.remove("loading");
+                    setAnswer(loading, data.response);
+                } catch (e) {
+                    loading.classList.remove("loading");
+                    loading.textContent = "Error: " + e.message;
+                }
+                messages.scrollTop = messages.scrollHeight;
+                sendBtn.disabled = false;
+                userInput.focus();
+            }
+
+            async function newSession() {
+                if (sessionId) {
+                    await fetch("/clear?session_id=" + encodeURIComponent(sessionId), { method: "POST" });
+                }
+                sessionId = null;
+                statusEl.textContent = "New session";
+                messages.innerHTML =
+                    '<div class="empty" id="empty"><div class="mark">✦</div><p>New client session started. Describe your client to begin.</p></div>';
+                userInput.focus();
+            }
+
+            sendBtn.addEventListener("click", () => send());
+            userInput.addEventListener("keydown", (e) => {
+                if (e.key === "Enter") send();
+            });
+            document.querySelectorAll(".examples button").forEach((btn) =>
+                btn.addEventListener("click", () => send(btn.textContent)),
+            );
+            document.getElementById("new-session").addEventListener("click", newSession);
+            userInput.focus();
+        </script>
+    </body>
+</html>

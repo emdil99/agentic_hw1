@@ -1,0 +1,1058 @@
+"""The Studio Rx data library: Pilates exercises, conditions, and medication flags.
+
+This file is data only. The tools in tools.py read it.
+
+EXERCISES
+    Each exercise has:
+      name         Display name.
+      aliases      Other names instructors use (lowercase), for matching user input.
+      phase        "warm_up", "main", or "cool_down".
+      level        "beginner", "intermediate", or "advanced".
+      equipment    "mat" or "reformer". Small props are listed under modifications.
+      position     Starting position: supine, prone, side_lying, seated, kneeling,
+                   quadruped, standing, or plank.
+      focus        What it works: core, glutes, legs, back_extensors, mobility,
+                   shoulders, balance, breath.
+      minutes      Rough time to teach it, including set-up.
+      reps         A typical rep range.
+      cues         Two or three teaching cues.
+      tags         Movement properties that conditions screen against (see TAGS).
+      modifications  Easier or safer versions. Each lists the conditions or
+                   reasons it is good for ("general" means it's a good default).
+      progressions Harder versions for when the client is ready.
+
+CONDITIONS
+    Maps a condition to the movement tags a class plan should avoid entirely
+    (avoid_tags) and the ones it can keep with care (caution_tags).
+
+MEDICATION_FLAGS
+    Words to look for in an FDA drug label, what each finding means in a Pilates
+    session, and which CONDITIONS entry to plan around.
+
+Nothing here is medical advice. It is a teaching aid for flagging things to
+discuss with a client's healthcare provider.
+"""
+
+# Every tag used below, and what it means.
+TAGS = {
+    "spinal_flexion": "Trunk curls forward against gravity or load (e.g. Roll Up, head-up Hundred).",
+    "spinal_extension": "Trunk arches back (e.g. Swan).",
+    "rotation": "Trunk twists.",
+    "lateral_flexion": "Trunk side-bends.",
+    "head_lift": "Head and shoulders held off the mat (sustained neck flexion).",
+    "inversion": "Hips lifted above the head, weight on the shoulders and neck.",
+    "rolling": "Rolling on the spine.",
+    "high_abdominal_pressure": "Hard bracing that spikes intra-abdominal pressure and invites breath holding.",
+    "wrist_loading": "Body weight supported on the hands.",
+    "deep_knee_flexion": "Knees bent fully under load or body weight.",
+    "deep_hip_flexion": "Hip flexed past 90 degrees with the knee toward the chest.",
+    "hip_adduction_cross": "Leg crosses the body's midline.",
+    "overhead": "Arms working overhead under load.",
+    "balance": "Single-leg or narrow-base balance challenge.",
+    "high_impact": "Jumping or rebounding.",
+    "supine": "Lying on the back.",
+    "prone": "Lying face down.",
+    "kneeling": "Body weight on the knees.",
+}
+
+EXERCISES = [
+    # ------------------------------------------------------------------ warm up
+    {
+        "name": "Supine Breathing",
+        "aliases": ["breathing", "lateral breathing", "pilates breathing"],
+        "phase": "warm_up",
+        "level": "beginner",
+        "equipment": "mat",
+        "position": "supine",
+        "focus": ["breath", "core"],
+        "minutes": 2,
+        "reps": "5-8 breaths",
+        "cues": [
+            "Hands on the ribs; breathe into the sides and back of the ribcage.",
+            "Exhale and feel the deep abdominals draw in, without tucking the pelvis.",
+        ],
+        "tags": ["supine"],
+        "modifications": [
+            {"name": "Seated breathing", "how": "Sit on a chair or box with feet flat.", "for": ["pregnancy", "orthostatic_hypotension", "general"]},
+        ],
+        "progressions": [],
+    },
+    {
+        "name": "Pelvic Curl",
+        "aliases": ["bridge", "bridging", "pelvic curl bridge", "articulating bridge"],
+        "phase": "warm_up",
+        "level": "beginner",
+        "equipment": "mat",
+        "position": "supine",
+        "focus": ["glutes", "mobility", "core"],
+        "minutes": 3,
+        "reps": "6-8",
+        "cues": [
+            "Exhale to tilt the pelvis and peel the spine up one bone at a time.",
+            "Keep the weight between the shoulder blades, not on the neck.",
+            "Inhale at the top, exhale to roll down from the top of the spine.",
+        ],
+        "tags": ["supine", "spinal_flexion"],
+        "modifications": [
+            {"name": "Neutral spine bridge", "how": "Lift and lower with a long, neutral spine instead of articulating.", "for": ["osteoporosis", "lumbar_disc_herniation", "general"]},
+            {"name": "Small range bridge", "how": "Lift only the hips an inch or two off the mat.", "for": ["neck_pain", "general"]},
+            {"name": "Seated pelvic tilts", "how": "Rock the pelvis forward and back while seated on a ball or chair.", "for": ["pregnancy"]},
+        ],
+        "progressions": [
+            {"name": "Single leg bridge", "how": "Hold the top and extend one leg, keeping the pelvis level."},
+            {"name": "Bridge with feet on a ball", "how": "Place the feet on a small stability ball."},
+        ],
+    },
+    {
+        "name": "Supine Spine Twist",
+        "aliases": ["knee sways", "windshield wipers", "supine twist", "knee drops"],
+        "phase": "warm_up",
+        "level": "beginner",
+        "equipment": "mat",
+        "position": "supine",
+        "focus": ["mobility", "core"],
+        "minutes": 2,
+        "reps": "4-6 each side",
+        "cues": [
+            "Knees together, let them sway a small range to one side.",
+            "Keep both shoulders heavy on the mat.",
+            "Exhale to bring the knees back to center from the abdominals.",
+        ],
+        "tags": ["supine", "rotation"],
+        "modifications": [
+            {"name": "Small range knee sways", "how": "Move only a few inches each way with feet on the mat.", "for": ["osteoporosis", "lumbar_disc_herniation", "spondylolisthesis", "hip_replacement", "general"]},
+            {"name": "Side-lying open book", "how": "Lie on the side and open the top arm toward the ceiling.", "for": ["pregnancy"]},
+        ],
+        "progressions": [
+            {"name": "Tabletop twist", "how": "Hold the legs in tabletop while twisting."},
+        ],
+    },
+    {
+        "name": "Chest Lift",
+        "aliases": ["head lift", "ab curl", "crunch", "chest lifts"],
+        "phase": "warm_up",
+        "level": "beginner",
+        "equipment": "mat",
+        "position": "supine",
+        "focus": ["core"],
+        "minutes": 2,
+        "reps": "6-8",
+        "cues": [
+            "Hands behind the head; nod the chin, then curl to the tips of the shoulder blades.",
+            "Keep space between the chin and chest.",
+            "Exhale to lift, inhale to hold, exhale to lower.",
+        ],
+        "tags": ["supine", "spinal_flexion", "head_lift"],
+        "modifications": [
+            {"name": "Head-down abdominal set", "how": "Keep the head on the mat and exhale to draw the abdominals in and hold.", "for": ["osteoporosis", "neck_pain", "diastasis_recti", "lumbar_disc_herniation", "general"]},
+            {"name": "Supported chest lift", "how": "Lift with a towel or theraband behind the head, holding the ends to support the neck.", "for": ["neck_pain"]},
+        ],
+        "progressions": [
+            {"name": "Chest lift with rotation", "how": "Curl up, then rotate toward one knee."},
+        ],
+    },
+    {
+        "name": "Cat-Cow",
+        "aliases": ["cat cow", "cat stretch", "spinal flexion and extension"],
+        "phase": "warm_up",
+        "level": "beginner",
+        "equipment": "mat",
+        "position": "quadruped",
+        "focus": ["mobility"],
+        "minutes": 2,
+        "reps": "5-6",
+        "cues": [
+            "Hands under shoulders, knees under hips.",
+            "Exhale to round from the tailbone; inhale to lengthen and gently arch.",
+        ],
+        "tags": ["spinal_flexion", "spinal_extension", "wrist_loading", "kneeling"],
+        "modifications": [
+            {"name": "Forearm cat-cow", "how": "Do it on the forearms instead of the hands.", "for": ["wrist_pain"]},
+            {"name": "Seated cat-cow", "how": "Sit on a chair with hands on the thighs.", "for": ["wrist_pain", "knee_pain", "pregnancy", "general"]},
+            {"name": "Neutral hold", "how": "Hold a long neutral spine in quadruped and breathe, without rounding.", "for": ["osteoporosis", "lumbar_disc_herniation"]},
+        ],
+        "progressions": [],
+    },
+    {
+        "name": "Standing Roll Down",
+        "aliases": ["roll down", "wall roll down"],
+        "phase": "warm_up",
+        "level": "beginner",
+        "equipment": "mat",
+        "position": "standing",
+        "focus": ["mobility"],
+        "minutes": 2,
+        "reps": "3-4",
+        "cues": [
+            "Nod the chin and roll down one vertebra at a time, knees soft.",
+            "Stack back up from the pelvis, head last.",
+        ],
+        "tags": ["spinal_flexion"],
+        "modifications": [
+            {"name": "Wall roll down (small range)", "how": "Back against a wall, roll down only to the bottom of the shoulder blades.", "for": ["lumbar_disc_herniation", "balance_impairment", "general"]},
+            {"name": "Standing hip hinge", "how": "Hinge forward from the hips with a long spine and hands on the thighs.", "for": ["osteoporosis", "hypertension", "orthostatic_hypotension"]},
+        ],
+        "progressions": [],
+    },
+    # -------------------------------------------------------------- main: mat
+    {
+        "name": "The Hundred",
+        "aliases": ["hundred", "hundreds", "the 100", "100s"],
+        "phase": "main",
+        "level": "beginner",
+        "equipment": "mat",
+        "position": "supine",
+        "focus": ["core", "breath"],
+        "minutes": 2,
+        "reps": "10 breath cycles (100 pumps)",
+        "cues": [
+            "Curl the head and shoulders up and reach the arms long by the hips.",
+            "Pump the arms: inhale for 5, exhale for 5.",
+            "Legs in tabletop to start; extend only if the low back stays down.",
+        ],
+        "tags": ["supine", "spinal_flexion", "head_lift", "high_abdominal_pressure"],
+        "modifications": [
+            {"name": "Head-down Hundred", "how": "Keep the head on the mat, feet on the mat or in tabletop, and pump the arms.", "for": ["osteoporosis", "neck_pain", "diastasis_recti", "lumbar_disc_herniation", "hypertension", "general"]},
+            {"name": "Head on a pillow", "how": "Rest the head on a folded towel or small ball for support.", "for": ["neck_pain"]},
+            {"name": "Seated Hundred", "how": "Sit tall on a box or ball and pump the arms with the same breath.", "for": ["pregnancy", "orthostatic_hypotension"]},
+        ],
+        "progressions": [
+            {"name": "Legs at 45 degrees", "how": "Extend the legs to a low diagonal, keeping the low back stable."},
+        ],
+    },
+    {
+        "name": "Roll Up",
+        "aliases": ["rollup", "roll-up", "the roll up"],
+        "phase": "main",
+        "level": "intermediate",
+        "equipment": "mat",
+        "position": "supine",
+        "focus": ["core", "mobility"],
+        "minutes": 3,
+        "reps": "5-6",
+        "cues": [
+            "Arms reach to the ceiling; nod the chin and peel up one vertebra at a time.",
+            "Keep the legs heavy and reach forward over the legs.",
+            "Roll back down with control, sacrum first.",
+        ],
+        "tags": ["supine", "spinal_flexion", "head_lift", "high_abdominal_pressure"],
+        "modifications": [
+            {"name": "Half Roll Back", "how": "Start seated, knees bent, and roll back only to the low back, then return.", "for": ["neck_pain", "general"]},
+            {"name": "Roll up with a theraband", "how": "Loop a band around the feet and use it for help.", "for": ["general"]},
+            {"name": "Seated spine lengthening", "how": "Sit tall with knees bent and reach forward from the hips with a long spine. No rolling.", "for": ["osteoporosis", "lumbar_disc_herniation", "diastasis_recti"]},
+        ],
+        "progressions": [
+            {"name": "Roll up with arms overhead", "how": "Begin with the arms overhead on the mat."},
+        ],
+    },
+    {
+        "name": "Single Leg Circles",
+        "aliases": ["leg circles", "single leg circle", "one leg circle"],
+        "phase": "main",
+        "level": "beginner",
+        "equipment": "mat",
+        "position": "supine",
+        "focus": ["core", "legs", "mobility"],
+        "minutes": 3,
+        "reps": "5 each direction, each leg",
+        "cues": [
+            "One leg to the ceiling, the other bent or long on the mat.",
+            "Circle across the body and around, keeping the pelvis still.",
+        ],
+        "tags": ["supine", "hip_adduction_cross"],
+        "modifications": [
+            {"name": "Small circles, bottom knee bent", "how": "Keep the bottom knee bent and draw small circles.", "for": ["general"]},
+            {"name": "Circles that stay on their own side", "how": "Circle without crossing the midline of the body.", "for": ["hip_replacement"]},
+            {"name": "Side-lying leg circles", "how": "Do the circles lying on the side.", "for": ["pregnancy"]},
+        ],
+        "progressions": [
+            {"name": "Bigger circles, both legs long", "how": "Extend the bottom leg along the mat and widen the circle."},
+        ],
+    },
+    {
+        "name": "Rolling Like a Ball",
+        "aliases": ["rolling like a ball", "rolling", "rolling ball"],
+        "phase": "main",
+        "level": "intermediate",
+        "equipment": "mat",
+        "position": "seated",
+        "focus": ["core", "mobility"],
+        "minutes": 2,
+        "reps": "6-8",
+        "cues": [
+            "Balance behind the sit bones in a tight ball.",
+            "Roll back to the shoulder blades, never onto the neck.",
+            "Return to balance without the feet touching down.",
+        ],
+        "tags": ["spinal_flexion", "rolling", "deep_hip_flexion", "high_abdominal_pressure"],
+        "modifications": [
+            {"name": "Balance hold", "how": "Find the balance point behind the sit bones and hold it, with no rolling.", "for": ["neck_pain", "general"]},
+            {"name": "Seated knee lifts", "how": "Sit tall with a neutral spine and lift one foot at a time.", "for": ["osteoporosis", "lumbar_disc_herniation", "hip_replacement"]},
+        ],
+        "progressions": [],
+    },
+    {
+        "name": "Single Leg Stretch",
+        "aliases": ["single leg stretch", "single leg pull"],
+        "phase": "main",
+        "level": "beginner",
+        "equipment": "mat",
+        "position": "supine",
+        "focus": ["core"],
+        "minutes": 2,
+        "reps": "8 each side",
+        "cues": [
+            "Head and shoulders up; pull one knee in and extend the other leg.",
+            "Keep the torso still while the legs switch.",
+        ],
+        "tags": ["supine", "spinal_flexion", "head_lift", "deep_hip_flexion"],
+        "modifications": [
+            {"name": "Head-down single leg stretch", "how": "Keep the head on the mat and switch legs slowly.", "for": ["osteoporosis", "neck_pain", "diastasis_recti", "lumbar_disc_herniation", "general"]},
+            {"name": "Toe taps", "how": "Head down, legs in tabletop; tap one foot down at a time.", "for": ["hip_replacement", "general"]},
+        ],
+        "progressions": [
+            {"name": "Faster tempo", "how": "Switch legs on a quicker, steady rhythm."},
+        ],
+    },
+    {
+        "name": "Double Leg Stretch",
+        "aliases": ["double leg stretch", "double leg pull"],
+        "phase": "main",
+        "level": "intermediate",
+        "equipment": "mat",
+        "position": "supine",
+        "focus": ["core", "breath"],
+        "minutes": 2,
+        "reps": "6-8",
+        "cues": [
+            "From a tight ball, inhale to reach arms and legs long.",
+            "Exhale to circle the arms and hug back in, keeping the head up.",
+        ],
+        "tags": ["supine", "spinal_flexion", "head_lift", "high_abdominal_pressure", "overhead", "deep_hip_flexion"],
+        "modifications": [
+            {"name": "Head-down double leg stretch", "how": "Head on the mat; reach the legs only as far as the low back stays stable.", "for": ["osteoporosis", "neck_pain", "diastasis_recti", "lumbar_disc_herniation", "general"]},
+            {"name": "Arms only, no overhead circle", "how": "Reach the arms forward by the hips instead of overhead.", "for": ["shoulder_impingement"]},
+        ],
+        "progressions": [
+            {"name": "Lower leg line", "how": "Reach the legs to a lower diagonal."},
+        ],
+    },
+    {
+        "name": "Criss-Cross",
+        "aliases": ["criss cross", "crisscross", "bicycle"],
+        "phase": "main",
+        "level": "intermediate",
+        "equipment": "mat",
+        "position": "supine",
+        "focus": ["core"],
+        "minutes": 2,
+        "reps": "6-8 each side",
+        "cues": [
+            "Hands behind the head; rotate the ribs toward the bent knee.",
+            "Keep the elbows wide and the pelvis still.",
+        ],
+        "tags": ["supine", "spinal_flexion", "rotation", "head_lift", "high_abdominal_pressure"],
+        "modifications": [
+            {"name": "Head-down oblique reach", "how": "Head on the mat; reach one hand toward the opposite knee, shoulders staying down.", "for": ["neck_pain", "diastasis_recti", "general"]},
+            {"name": "Side-lying oblique lift", "how": "Lie on the side and lift both legs a few inches off the mat.", "for": ["osteoporosis", "lumbar_disc_herniation"]},
+        ],
+        "progressions": [
+            {"name": "Slow hold", "how": "Hold each rotation for three counts."},
+        ],
+    },
+    {
+        "name": "Spine Stretch Forward",
+        "aliases": ["spine stretch", "spine stretch forward"],
+        "phase": "main",
+        "level": "beginner",
+        "equipment": "mat",
+        "position": "seated",
+        "focus": ["mobility", "core"],
+        "minutes": 2,
+        "reps": "4-5",
+        "cues": [
+            "Sit tall, legs a bit wider than the hips.",
+            "Exhale to round forward from the head down, as if over a beach ball.",
+            "Restack the spine one vertebra at a time.",
+        ],
+        "tags": ["spinal_flexion"],
+        "modifications": [
+            {"name": "Sit on a raised cushion", "how": "Sit on a folded blanket with knees bent so the pelvis can stay upright.", "for": ["general"]},
+            {"name": "Seated hip hinge", "how": "Hinge forward from the hips with a long, neutral spine.", "for": ["osteoporosis", "lumbar_disc_herniation"]},
+        ],
+        "progressions": [],
+    },
+    {
+        "name": "Saw",
+        "aliases": ["the saw"],
+        "phase": "main",
+        "level": "intermediate",
+        "equipment": "mat",
+        "position": "seated",
+        "focus": ["mobility", "core"],
+        "minutes": 2,
+        "reps": "4 each side",
+        "cues": [
+            "Arms out to the sides; rotate, then reach the pinky past the opposite little toe.",
+            "Keep both sit bones heavy.",
+        ],
+        "tags": ["spinal_flexion", "rotation"],
+        "modifications": [
+            {"name": "Seated twist only", "how": "Sit tall and rotate without folding forward.", "for": ["osteoporosis", "lumbar_disc_herniation", "general"]},
+        ],
+        "progressions": [],
+    },
+    {
+        "name": "Swan Prep",
+        "aliases": ["swan", "swan dive prep", "prone extension", "cobra"],
+        "phase": "main",
+        "level": "beginner",
+        "equipment": "mat",
+        "position": "prone",
+        "focus": ["back_extensors"],
+        "minutes": 2,
+        "reps": "5-6",
+        "cues": [
+            "Hands under the shoulders, forehead down.",
+            "Lengthen through the crown and lift the chest just a little, abdominals lifted.",
+        ],
+        "tags": ["prone", "spinal_extension"],
+        "modifications": [
+            {"name": "Small range swan", "how": "Lift only the head and the top of the chest.", "for": ["general"]},
+            {"name": "Seated thoracic extension", "how": "Sit on a chair and lift the breastbone with hands behind the head.", "for": ["pregnancy", "spondylolisthesis"]},
+        ],
+        "progressions": [
+            {"name": "Full swan", "how": "Press up farther, then rock forward and back."},
+        ],
+    },
+    {
+        "name": "Single Leg Kick",
+        "aliases": ["single leg kick", "leg kicks prone"],
+        "phase": "main",
+        "level": "beginner",
+        "equipment": "mat",
+        "position": "prone",
+        "focus": ["legs", "back_extensors"],
+        "minutes": 2,
+        "reps": "6-8 each leg",
+        "cues": [
+            "Prop up on the forearms, chest lifted.",
+            "Kick the heel toward the seat twice, then reach the leg long.",
+        ],
+        "tags": ["prone", "spinal_extension", "deep_knee_flexion"],
+        "modifications": [
+            {"name": "Forehead down", "how": "Rest the forehead on the hands instead of propping up on the forearms.", "for": ["spondylolisthesis", "general"]},
+            {"name": "Small range kicks", "how": "Bend the knee only to 90 degrees.", "for": ["knee_pain"]},
+        ],
+        "progressions": [],
+    },
+    {
+        "name": "Swimming",
+        "aliases": ["swimming", "prone swimming"],
+        "phase": "main",
+        "level": "intermediate",
+        "equipment": "mat",
+        "position": "prone",
+        "focus": ["back_extensors", "glutes", "shoulders"],
+        "minutes": 2,
+        "reps": "20-30 counts",
+        "cues": [
+            "Lift the arms, legs, and chest slightly off the mat.",
+            "Flutter the opposite arm and leg, breathing in for 5 and out for 5.",
+        ],
+        "tags": ["prone", "spinal_extension", "overhead"],
+        "modifications": [
+            {"name": "Legs only", "how": "Forehead on the hands; alternate lifting the legs.", "for": ["shoulder_impingement", "neck_pain", "general"]},
+            {"name": "Bird Dog", "how": "Do the same opposite arm and leg pattern on hands and knees.", "for": ["pregnancy"]},
+        ],
+        "progressions": [],
+    },
+    {
+        "name": "Bird Dog",
+        "aliases": ["bird dog", "quadruped arm and leg reach", "pointer"],
+        "phase": "main",
+        "level": "beginner",
+        "equipment": "mat",
+        "position": "quadruped",
+        "focus": ["core", "glutes", "balance"],
+        "minutes": 3,
+        "reps": "6 each side",
+        "cues": [
+            "Reach the opposite arm and leg long without shifting the pelvis.",
+            "Imagine balancing a cup of tea on the low back.",
+        ],
+        "tags": ["wrist_loading", "kneeling", "balance"],
+        "modifications": [
+            {"name": "Leg-only reach", "how": "Keep both hands down and slide one leg back along the mat.", "for": ["balance_impairment", "shoulder_impingement", "general"]},
+            {"name": "Forearms down", "how": "Rest on the forearms instead of the hands.", "for": ["wrist_pain"]},
+            {"name": "Padded knees", "how": "Fold the mat or add a cushion under the knees.", "for": ["knee_pain"]},
+        ],
+        "progressions": [
+            {"name": "Elbow to knee crunch", "how": "Draw the elbow and knee together under the body between reaches."},
+        ],
+    },
+    {
+        "name": "Side Kick Series",
+        "aliases": ["side kicks", "side kick", "side lying leg series", "side leg lifts"],
+        "phase": "main",
+        "level": "beginner",
+        "equipment": "mat",
+        "position": "side_lying",
+        "focus": ["glutes", "legs", "core"],
+        "minutes": 4,
+        "reps": "8 each move, each side",
+        "cues": [
+            "Stack the hips and shoulders; bring the legs slightly forward.",
+            "Lift the waist off the mat and keep the torso still as the leg moves.",
+        ],
+        "tags": ["hip_adduction_cross"],
+        "modifications": [
+            {"name": "Head on the arm", "how": "Lay the head on the extended bottom arm instead of propping on the elbow.", "for": ["neck_pain", "shoulder_impingement", "general"]},
+            {"name": "Front kick range limited", "how": "Keep the top leg in line with the hip; don't bring it forward past 90 degrees or across.", "for": ["hip_replacement"]},
+            {"name": "Pillow between the knees", "how": "Rest the top knee on a pillow and do small lifts only.", "for": ["pregnancy"]},
+        ],
+        "progressions": [
+            {"name": "Ankle weights", "how": "Add a light ankle weight."},
+        ],
+    },
+    {
+        "name": "Clam",
+        "aliases": ["clam", "clamshell", "clams"],
+        "phase": "main",
+        "level": "beginner",
+        "equipment": "mat",
+        "position": "side_lying",
+        "focus": ["glutes"],
+        "minutes": 2,
+        "reps": "10-12 each side",
+        "cues": [
+            "Heels together, knees bent; open the top knee without rolling the pelvis back.",
+        ],
+        "tags": [],
+        "modifications": [
+            {"name": "Pillow under the head", "how": "Support the head with a pillow or the bottom arm.", "for": ["neck_pain", "pregnancy", "general"]},
+        ],
+        "progressions": [
+            {"name": "Band around the knees", "how": "Add a light resistance band above the knees."},
+        ],
+    },
+    {
+        "name": "Front Plank",
+        "aliases": ["plank", "leg pull front prep", "front support"],
+        "phase": "main",
+        "level": "intermediate",
+        "equipment": "mat",
+        "position": "plank",
+        "focus": ["core", "shoulders"],
+        "minutes": 2,
+        "reps": "3 x 20-30 second holds",
+        "cues": [
+            "Hands under the shoulders; one long line from head to heels.",
+            "Push the floor away so the shoulder blades stay wide.",
+        ],
+        "tags": ["wrist_loading", "high_abdominal_pressure"],
+        "modifications": [
+            {"name": "Knee plank", "how": "Hold the plank with the knees down.", "for": ["general"]},
+            {"name": "Forearm plank", "how": "Hold the plank on the forearms.", "for": ["wrist_pain"]},
+            {"name": "Incline plank", "how": "Place the hands on a bench, chair, or reformer footbar.", "for": ["wrist_pain", "diastasis_recti", "hypertension", "shoulder_impingement"]},
+        ],
+        "progressions": [
+            {"name": "Leg Pull Front", "how": "From plank, lift one leg at a time."},
+        ],
+    },
+    {
+        "name": "Side Plank",
+        "aliases": ["side plank", "side bend prep", "side support"],
+        "phase": "main",
+        "level": "intermediate",
+        "equipment": "mat",
+        "position": "side_lying",
+        "focus": ["core", "shoulders"],
+        "minutes": 2,
+        "reps": "2 x 15-20 second holds each side",
+        "cues": [
+            "Elbow under the shoulder; lift the hips into a straight line.",
+            "Reach the top arm long or keep the hand on the hip.",
+        ],
+        "tags": ["lateral_flexion", "high_abdominal_pressure"],
+        "modifications": [
+            {"name": "Knee-down side plank", "how": "Keep the bottom knee bent on the mat.", "for": ["general", "shoulder_impingement"]},
+            {"name": "Side-lying leg lift", "how": "Lie on the side and lift both legs together slightly.", "for": ["pregnancy", "diastasis_recti"]},
+        ],
+        "progressions": [
+            {"name": "Side Bend", "how": "Full side plank on the hand with an arc of the top arm overhead."},
+        ],
+    },
+    {
+        "name": "Teaser",
+        "aliases": ["teaser", "teaser prep", "v sit"],
+        "phase": "main",
+        "level": "advanced",
+        "equipment": "mat",
+        "position": "supine",
+        "focus": ["core", "balance"],
+        "minutes": 3,
+        "reps": "3-5",
+        "cues": [
+            "Roll up into a V-shaped balance with the legs at a diagonal.",
+            "Reach the arms parallel to the legs; roll down with control.",
+        ],
+        "tags": ["supine", "spinal_flexion", "head_lift", "high_abdominal_pressure", "deep_hip_flexion", "balance"],
+        "modifications": [
+            {"name": "One-leg teaser", "how": "Keep one foot on the mat and extend the other leg.", "for": ["general"]},
+            {"name": "Seated balance with neutral spine", "how": "Sit behind the sit bones with a long spine and lift one foot at a time.", "for": ["osteoporosis", "lumbar_disc_herniation", "diastasis_recti"]},
+        ],
+        "progressions": [
+            {"name": "Teaser with leg lowers", "how": "Hold the V and lower and lift the legs."},
+        ],
+    },
+    {
+        "name": "Rollover",
+        "aliases": ["roll over", "rollover", "jackknife prep"],
+        "phase": "main",
+        "level": "advanced",
+        "equipment": "mat",
+        "position": "supine",
+        "focus": ["core", "mobility"],
+        "minutes": 2,
+        "reps": "3-5",
+        "cues": [
+            "Lift the legs over the head, weight on the shoulder blades, not the neck.",
+            "Roll down one vertebra at a time with the legs reaching away.",
+        ],
+        "tags": ["supine", "spinal_flexion", "inversion", "rolling", "high_abdominal_pressure"],
+        "modifications": [
+            {"name": "Pelvic Curl", "how": "Do an articulating bridge instead to work spinal articulation without inverting.", "for": ["general", "hypertension", "neck_pain"]},
+            {"name": "Supine leg lowers", "how": "Legs in tabletop; lower one foot at a time toward the mat, head down.", "for": ["osteoporosis", "lumbar_disc_herniation"]},
+        ],
+        "progressions": [],
+    },
+    {
+        "name": "Mermaid",
+        "aliases": ["mermaid", "side stretch seated"],
+        "phase": "cool_down",
+        "level": "beginner",
+        "equipment": "mat",
+        "position": "seated",
+        "focus": ["mobility"],
+        "minutes": 2,
+        "reps": "3 each side",
+        "cues": [
+            "Sit in a Z-sit or cross-legged; reach one arm overhead and side-bend away.",
+            "Keep both sit bones heavy and breathe into the open side.",
+        ],
+        "tags": ["lateral_flexion", "overhead"],
+        "modifications": [
+            {"name": "Chair mermaid", "how": "Sit on a chair and side-bend with the hand on the head.", "for": ["hip_replacement", "knee_pain", "general"]},
+            {"name": "Hand on the head", "how": "Keep the hand behind the head instead of reaching it overhead.", "for": ["shoulder_impingement"]},
+        ],
+        "progressions": [
+            {"name": "Mermaid with twist", "how": "Add a rotation toward the floor at the end of the side bend."},
+        ],
+    },
+    # ---------------------------------------------------------- main: reformer
+    {
+        "name": "Reformer Footwork",
+        "aliases": ["footwork", "foot work", "reformer footwork"],
+        "phase": "warm_up",
+        "level": "beginner",
+        "equipment": "reformer",
+        "position": "supine",
+        "focus": ["legs", "core"],
+        "minutes": 5,
+        "reps": "10 each foot position",
+        "cues": [
+            "Neutral pelvis; press out through heels, arches, then toes.",
+            "Control the carriage on the way in.",
+        ],
+        "tags": ["supine", "deep_knee_flexion"],
+        "modifications": [
+            {"name": "Limited knee range", "how": "Stop the carriage early so the knees don't bend deeply (adjust headrest or stopper).", "for": ["knee_pain", "hip_replacement"]},
+            {"name": "Raised headrest, lighter springs", "how": "Raise the headrest and lighten the springs.", "for": ["general", "neck_pain"]},
+        ],
+        "progressions": [
+            {"name": "Single leg footwork", "how": "Press out with one leg at a time."},
+        ],
+    },
+    {
+        "name": "Reformer Bridging",
+        "aliases": ["reformer bridge", "bridging on reformer"],
+        "phase": "main",
+        "level": "intermediate",
+        "equipment": "reformer",
+        "position": "supine",
+        "focus": ["glutes", "legs"],
+        "minutes": 3,
+        "reps": "8-10",
+        "cues": [
+            "Feet on the footbar; lift the hips into a bridge.",
+            "Press the carriage out and in while keeping the hips level.",
+        ],
+        "tags": ["supine"],
+        "modifications": [
+            {"name": "Hold the bridge, no carriage movement", "how": "Lift and hold the bridge with the carriage still.", "for": ["general", "knee_pain"]},
+        ],
+        "progressions": [
+            {"name": "Single leg bridging", "how": "Press out with one foot on the bar."},
+        ],
+    },
+    {
+        "name": "Feet in Straps",
+        "aliases": ["feet in straps", "frogs", "leg circles in straps", "straps"],
+        "phase": "main",
+        "level": "beginner",
+        "equipment": "reformer",
+        "position": "supine",
+        "focus": ["legs", "core", "mobility"],
+        "minutes": 5,
+        "reps": "8 each pattern",
+        "cues": [
+            "Feet in the straps; keep the pelvis level and still.",
+            "Frogs, leg lowers, circles, and openings with the legs working against the springs.",
+        ],
+        "tags": ["supine", "deep_hip_flexion", "hip_adduction_cross"],
+        "modifications": [
+            {"name": "Small range, no crossing", "how": "Do only leg lowers and small openings, keeping the legs on their own side.", "for": ["hip_replacement", "general"]},
+        ],
+        "progressions": [],
+    },
+    {
+        "name": "Reformer Rowing",
+        "aliases": ["rowing", "rowing series", "seated rowing"],
+        "phase": "main",
+        "level": "intermediate",
+        "equipment": "reformer",
+        "position": "seated",
+        "focus": ["shoulders", "back_extensors"],
+        "minutes": 4,
+        "reps": "6 each pattern",
+        "cues": [
+            "Sit tall facing the straps; pull with the back, not the hands.",
+            "Keep the ribs soft as the arms move.",
+        ],
+        "tags": ["overhead"],
+        "modifications": [
+            {"name": "Low rows only", "how": "Pull only to the sides of the ribcage, without lifting the arms overhead.", "for": ["shoulder_impingement", "general"]},
+            {"name": "Seated on a box", "how": "Sit on the box to raise the hips above the knees.", "for": ["hip_replacement", "knee_pain"]},
+        ],
+        "progressions": [],
+    },
+    {
+        "name": "Knee Stretches",
+        "aliases": ["knee stretch", "knee stretches", "round back knee stretch"],
+        "phase": "main",
+        "level": "intermediate",
+        "equipment": "reformer",
+        "position": "kneeling",
+        "focus": ["core", "legs"],
+        "minutes": 3,
+        "reps": "8-10 each version",
+        "cues": [
+            "Kneel on the carriage with hands on the footbar.",
+            "Push the carriage out with the legs while the torso stays still.",
+        ],
+        "tags": ["kneeling", "wrist_loading", "spinal_flexion"],
+        "modifications": [
+            {"name": "Flat back version", "how": "Keep a neutral spine instead of a round back.", "for": ["osteoporosis", "lumbar_disc_herniation", "general"]},
+            {"name": "Padded knees", "how": "Put a folded pad under the knees.", "for": ["knee_pain"]},
+            {"name": "Standing lunge on the reformer", "how": "Stand with one foot on the platform and do a scooter-style push.", "for": ["wrist_pain"]},
+        ],
+        "progressions": [
+            {"name": "Knees off", "how": "Hover the knees and push the carriage."},
+        ],
+    },
+    {
+        "name": "Jumpboard",
+        "aliases": ["jump board", "jumping", "cardio jumpboard"],
+        "phase": "main",
+        "level": "intermediate",
+        "equipment": "reformer",
+        "position": "supine",
+        "focus": ["legs"],
+        "minutes": 5,
+        "reps": "3 x 30-60 seconds",
+        "cues": [
+            "Land softly through the toes, balls of the feet, and heels.",
+            "Keep the pelvis neutral and the head heavy.",
+        ],
+        "tags": ["supine", "high_impact"],
+        "modifications": [
+            {"name": "Footwork pressing instead", "how": "Press the jumpboard without leaving it, like footwork.", "for": ["osteoporosis", "tendinopathy", "knee_pain", "balance_impairment", "general"]},
+        ],
+        "progressions": [],
+    },
+    {
+        "name": "Short Box Round Back",
+        "aliases": ["short box", "round back", "short box series"],
+        "phase": "main",
+        "level": "intermediate",
+        "equipment": "reformer",
+        "position": "seated",
+        "focus": ["core"],
+        "minutes": 3,
+        "reps": "5-6",
+        "cues": [
+            "Feet under the strap; round the lower back and roll back partway.",
+            "Return by deepening the curve, not by pulling with the feet.",
+        ],
+        "tags": ["spinal_flexion", "high_abdominal_pressure"],
+        "modifications": [
+            {"name": "Flat back lean", "how": "Lean back with a long, neutral spine and a small range.", "for": ["osteoporosis", "lumbar_disc_herniation", "diastasis_recti", "general"]},
+        ],
+        "progressions": [
+            {"name": "Short Box Twist", "how": "Add a rotation and reach."},
+        ],
+    },
+    # ----------------------------------------------------------------- cool down
+    {
+        "name": "Child's Pose",
+        "aliases": ["childs pose", "child's pose", "rest position"],
+        "phase": "cool_down",
+        "level": "beginner",
+        "equipment": "mat",
+        "position": "kneeling",
+        "focus": ["mobility", "breath"],
+        "minutes": 2,
+        "reps": "5-6 breaths",
+        "cues": [
+            "Sit back toward the heels with arms long or by the sides.",
+            "Breathe into the back of the ribs.",
+        ],
+        "tags": ["kneeling", "deep_knee_flexion", "deep_hip_flexion", "spinal_flexion"],
+        "modifications": [
+            {"name": "Wide-knee child's pose", "how": "Open the knees wide to make room for the belly.", "for": ["pregnancy"]},
+            {"name": "Supine knees to chest (one at a time)", "how": "On the back, hug one knee gently at a time.", "for": ["knee_pain", "general"]},
+            {"name": "Seated breathing", "how": "Sit tall and breathe slowly, hands on the ribs.", "for": ["osteoporosis", "hip_replacement", "lumbar_disc_herniation"]},
+        ],
+        "progressions": [],
+    },
+    {
+        "name": "Figure-4 Stretch",
+        "aliases": ["figure 4", "figure four", "supine piriformis stretch", "pigeon"],
+        "phase": "cool_down",
+        "level": "beginner",
+        "equipment": "mat",
+        "position": "supine",
+        "focus": ["mobility"],
+        "minutes": 2,
+        "reps": "30 seconds each side",
+        "cues": [
+            "Cross one ankle over the opposite knee; draw the legs in gently.",
+        ],
+        "tags": ["supine", "deep_hip_flexion", "hip_adduction_cross"],
+        "modifications": [
+            {"name": "Seated figure-4", "how": "Sit in a chair, ankle on the opposite knee, and lean forward with a long spine.", "for": ["pregnancy", "general"]},
+            {"name": "Feet stay on the mat", "how": "Keep the bottom foot on the mat instead of lifting it.", "for": ["knee_pain"]},
+        ],
+        "progressions": [],
+    },
+    {
+        "name": "Seated Spine Twist",
+        "aliases": ["spine twist", "seated twist", "seated spine twist"],
+        "phase": "cool_down",
+        "level": "beginner",
+        "equipment": "mat",
+        "position": "seated",
+        "focus": ["mobility"],
+        "minutes": 2,
+        "reps": "3-4 each side",
+        "cues": [
+            "Sit tall; grow taller as you rotate from the waist.",
+            "Exhale to twist, inhale to return to center.",
+        ],
+        "tags": ["rotation"],
+        "modifications": [
+            {"name": "Chair twist, small range", "how": "Sit on a chair and twist gently with hands on the thighs.", "for": ["osteoporosis", "lumbar_disc_herniation", "spondylolisthesis", "hip_replacement", "general"]},
+        ],
+        "progressions": [],
+    },
+    {
+        "name": "Standing Calf Raises",
+        "aliases": ["calf raises", "heel raises", "releve"],
+        "phase": "cool_down",
+        "level": "beginner",
+        "equipment": "mat",
+        "position": "standing",
+        "focus": ["legs", "balance"],
+        "minutes": 2,
+        "reps": "10-12",
+        "cues": [
+            "Stand tall, feet parallel; lift the heels slowly and lower with control.",
+        ],
+        "tags": ["balance"],
+        "modifications": [
+            {"name": "Hold a wall or chair", "how": "Rest the fingertips on a wall or chair back.", "for": ["balance_impairment", "orthostatic_hypotension", "pregnancy", "general"]},
+        ],
+        "progressions": [
+            {"name": "Single leg calf raises", "how": "Raise on one leg at a time."},
+        ],
+    },
+]
+
+CONDITIONS = {
+    "osteoporosis": {
+        "label": "Osteoporosis / osteopenia",
+        "aliases": ["osteopenia", "low bone density", "bone loss"],
+        "avoid_tags": ["spinal_flexion", "rolling", "inversion", "high_impact"],
+        "caution_tags": ["rotation", "lateral_flexion"],
+        "notes": "Loaded spinal flexion (especially combined with rotation) raises vertebral fracture risk. Favor neutral spine, extension, and balance work.",
+    },
+    "pregnancy": {
+        "label": "Pregnancy",
+        "aliases": ["pregnant", "prenatal"],
+        "avoid_tags": ["prone", "inversion", "rolling", "high_abdominal_pressure", "high_impact"],
+        "caution_tags": ["supine", "balance", "spinal_flexion"],
+        "notes": "After the first trimester, limit time lying flat on the back and avoid lying on the belly. Avoid hard bracing and breath holding. Relaxin can increase joint laxity.",
+    },
+    "lumbar_disc_herniation": {
+        "label": "Lumbar disc herniation",
+        "aliases": ["herniated disc", "disc bulge", "slipped disc", "bulging disc", "sciatica"],
+        "avoid_tags": ["spinal_flexion", "rolling", "inversion"],
+        "caution_tags": ["rotation", "high_abdominal_pressure"],
+        "notes": "Flexion, especially loaded, tends to aggravate posterior disc herniations. Neutral spine and gentle extension are often better tolerated.",
+    },
+    "spondylolisthesis": {
+        "label": "Spondylolisthesis / spondylolysis",
+        "aliases": ["spondy", "spondylolysis", "pars fracture"],
+        "avoid_tags": ["spinal_extension"],
+        "caution_tags": ["rotation"],
+        "notes": "Extension loads the posterior spine. Work in neutral and emphasize deep core stability.",
+    },
+    "hypertension": {
+        "label": "High blood pressure",
+        "aliases": ["high blood pressure", "htn"],
+        "avoid_tags": ["inversion"],
+        "caution_tags": ["high_abdominal_pressure"],
+        "notes": "Avoid head-below-heart positions and breath holding. Keep the breath flowing on exertion.",
+    },
+    "orthostatic_hypotension": {
+        "label": "Orthostatic hypotension / dizziness on standing",
+        "aliases": ["dizziness", "lightheaded", "low blood pressure", "postural hypotension"],
+        "avoid_tags": ["inversion"],
+        "caution_tags": ["supine", "prone"],
+        "notes": "Group floor work together and avoid frequent up-and-down transitions. Rise slowly through side-lying and seated, and pause before standing.",
+    },
+    "neck_pain": {
+        "label": "Neck pain / cervical issues",
+        "aliases": ["neck", "cervical", "whiplash"],
+        "avoid_tags": ["head_lift", "inversion"],
+        "caution_tags": ["prone"],
+        "notes": "Keep the head down or supported. Watch for jaw and neck gripping.",
+    },
+    "wrist_pain": {
+        "label": "Wrist pain / carpal tunnel",
+        "aliases": ["wrist", "carpal tunnel"],
+        "avoid_tags": ["wrist_loading"],
+        "caution_tags": [],
+        "notes": "Swap hands for forearms, use fists or wedges, or move the work off the floor.",
+    },
+    "knee_pain": {
+        "label": "Knee pain",
+        "aliases": ["knee", "knee replacement", "meniscus"],
+        "avoid_tags": ["deep_knee_flexion"],
+        "caution_tags": ["kneeling"],
+        "notes": "Pad or avoid kneeling; limit knee range under load.",
+    },
+    "hip_replacement": {
+        "label": "Hip replacement (posterior approach precautions)",
+        "aliases": ["hip replacement", "total hip", "tha", "hip surgery"],
+        "avoid_tags": ["deep_hip_flexion", "hip_adduction_cross"],
+        "caution_tags": ["rotation"],
+        "notes": "Classic posterior precautions: no hip flexion past 90, no crossing the midline, no internal rotation. Follow the surgeon's specific precautions, which vary by approach.",
+    },
+    "diastasis_recti": {
+        "label": "Diastasis recti",
+        "aliases": ["diastasis", "ab separation", "postpartum"],
+        "avoid_tags": ["high_abdominal_pressure", "head_lift"],
+        "caution_tags": ["spinal_flexion"],
+        "notes": "Watch for doming or coning along the midline. Build deep core control before curling work.",
+    },
+    "shoulder_impingement": {
+        "label": "Shoulder impingement",
+        "aliases": ["shoulder", "rotator cuff", "frozen shoulder"],
+        "avoid_tags": ["overhead"],
+        "caution_tags": ["wrist_loading"],
+        "notes": "Keep the arms below shoulder height under load and support plank variations on an incline.",
+    },
+    "balance_impairment": {
+        "label": "Balance impairment / fall risk",
+        "aliases": ["fall risk", "balance", "vertigo", "neuropathy"],
+        "avoid_tags": ["high_impact"],
+        "caution_tags": ["balance"],
+        "notes": "Keep a wall, chair, or reformer within reach for standing work.",
+    },
+    "tendinopathy": {
+        "label": "Tendinopathy / tendon rupture risk",
+        "aliases": ["tendinitis", "tendonitis", "achilles"],
+        "avoid_tags": ["high_impact"],
+        "caution_tags": ["balance"],
+        "notes": "Avoid sudden or ballistic loading, especially of the Achilles. Progress load slowly.",
+    },
+}
+
+# Sections of an openFDA drug label (https://api.fda.gov/drug/label.json) that
+# hold safety text. Older labels use "warnings"; newer ones "warnings_and_cautions".
+LABEL_SECTIONS = [
+    "boxed_warning",
+    "warnings_and_cautions",
+    "warnings",
+    "precautions",
+    "adverse_reactions",
+]
+
+MEDICATION_FLAGS = [
+    {
+        "flag": "dizziness_or_low_blood_pressure",
+        "keywords": ["orthostatic hypotension", "postural hypotension", "dizziness", "syncope", "lightheadedness"],
+        "pilates_caution": "May feel dizzy changing positions. Sequence floor work together, rise slowly, and pause seated before standing.",
+        "related_conditions": ["orthostatic_hypotension"],
+    },
+    {
+        "flag": "slowed_heart_rate",
+        "keywords": ["bradycardia", "beta-adrenergic block", "heart rate"],
+        "pilates_caution": "Heart rate may not rise with effort. Gauge intensity with perceived exertion or the talk test, not heart rate.",
+        "related_conditions": [],
+    },
+    {
+        "flag": "low_blood_sugar",
+        "keywords": ["hypoglycemia"],
+        "pilates_caution": "Ask when they last ate, keep a fast-acting sugar nearby, and watch for shakiness or sweating.",
+        "related_conditions": [],
+    },
+    {
+        "flag": "tendon_injury",
+        "keywords": ["tendon rupture", "tendinitis", "tendinopathy"],
+        "pilates_caution": "Higher risk of tendon injury, especially the Achilles. Avoid jumping and sudden loading.",
+        "related_conditions": ["tendinopathy"],
+    },
+    {
+        "flag": "bone_loss",
+        "keywords": ["osteoporosis", "bone mineral density", "bone loss"],
+        "pilates_caution": "Long-term use can thin bones. Plan as if for osteopenia: no loaded spinal flexion or rolling.",
+        "related_conditions": ["osteoporosis"],
+    },
+    {
+        "flag": "bleeding_or_bruising",
+        "keywords": ["bleeding", "hemorrhage", "bruising"],
+        "pilates_caution": "Bruises easily and falls are more serious. Avoid impact, pad hard surfaces, and take care with straps and springs.",
+        "related_conditions": ["balance_impairment"],
+    },
+    {
+        "flag": "drowsiness",
+        "keywords": ["drowsiness", "somnolence", "sedation"],
+        "pilates_caution": "Balance and reaction time may be reduced. Keep standing balance work supported.",
+        "related_conditions": ["balance_impairment"],
+    },
+    {
+        "flag": "muscle_pain",
+        "keywords": ["myopathy", "rhabdomyolysis", "myalgia"],
+        "pilates_caution": "Watch for unusual muscle pain or weakness. Progress intensity gradually and ask about soreness at the next session.",
+        "related_conditions": [],
+    },
+    {
+        "flag": "dehydration_or_electrolytes",
+        "keywords": ["dehydration", "electrolyte", "hypokalemia"],
+        "pilates_caution": "Encourage water before and during class; cramping or dizziness can be a sign.",
+        "related_conditions": [],
+    },
+]
