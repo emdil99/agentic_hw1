@@ -1,90 +1,67 @@
+"""The tools the harness can run, and the JSON that describes them to the model."""
+
 import json
-import os
 
 import requests
 
-from exercises import LABEL_SECTIONS, MEDICATION_FLAGS
+from exercises import EXERCISES, MEDICATION_FLAGS
 
-# openFDA drug labels. Free; an optional key (env var) raises the daily limit.
+# openFDA is free and needs no API key.
 DRUG_API = "https://api.fda.gov/drug/label.json"
-OPENFDA_API_KEY = os.environ.get("OPENFDA_API_KEY")
+
+LEVELS = ["beginner", "intermediate", "advanced"]
+CONDITIONS = sorted({c for ex in EXERCISES.values() for c in ex["avoid_for"]})
 
 
 def check_medication_exercise_flags(drug_name: str) -> str:
-    """Look up a drug's FDA label and flag warnings that matter in a Pilates session."""
-    drug_name = drug_name.strip().replace('"', "")
-    if not drug_name:
-        return json.dumps({"error": "drug_name is empty. Pass one medication name, e.g. 'metoprolol'."})
-
-    # Match the generic or the brand name (a space between terms means OR)
-    params = {
-        "search": f'openfda.generic_name:"{drug_name}" openfda.brand_name:"{drug_name}"',
-        "limit": 1,
-    }
-    if OPENFDA_API_KEY:
-        params["api_key"] = OPENFDA_API_KEY
-
+    """Look up a drug's FDA label and flag warnings that matter in a Pilates class."""
     try:
-        data = requests.get(DRUG_API, params=params, timeout=10).json()
+        search = f'openfda.generic_name:"{drug_name}" openfda.brand_name:"{drug_name}"'
+        data = requests.get(DRUG_API, params={"search": search, "limit": 1}, timeout=10).json()
     except requests.RequestException as e:
         # The model cannot see an exception. Return something it can reason about.
-        return json.dumps({"error": f"FDA label service failed: {e}. Try again shortly."})
+        return json.dumps({"error": f"FDA label service failed: {e}"})
 
-    # openFDA answers "no match" with an error object instead of an empty list
-    error = data.get("error", {})
-    if error.get("code") == "NOT_FOUND" or (not error and not data.get("results")):
-        return json.dumps({
-            "error": f"No FDA label found for '{drug_name}'. Check the spelling, try the "
-            "generic name (e.g. 'atorvastatin' for Lipitor), and look up one drug at a time."
-        })
-    if error:
-        return json.dumps({"error": f"FDA label service error: {error.get('message', error)}. Try again shortly."})
-
+    if not data.get("results"):
+        return json.dumps({"error": f"No FDA label found for '{drug_name}'. Try the generic name."})
     label = data["results"][0]
-    text = " ".join(" ".join(label.get(section, [])) for section in LABEL_SECTIONS)
-    lowered = text.lower()
 
-    # Each flag fires on its first matching keyword; quote the label around it as evidence
-    flags = []
-    for flag in MEDICATION_FLAGS:
-        for keyword in flag["keywords"]:
-            i = lowered.find(keyword)
-            if i != -1:
-                flags += [{
-                    "flag": flag["flag"],
-                    "matched": keyword,
-                    "label_excerpt": "..." + " ".join(text[max(0, i - 120):i + 180].split()) + "...",
-                    "pilates_caution": flag["pilates_caution"],
-                    "plan_around_conditions": flag["related_conditions"],
-                }]
-                break
+    text = " ".join(label.get("warnings_and_cautions", []) + label.get("warnings", []) + label.get("adverse_reactions", []))
+    flags = {word: caution for word, caution in MEDICATION_FLAGS.items() if word in text.lower()}
 
-    return json.dumps({
-        "drug": drug_name,
-        "matched_label": {
-            "generic_name": label.get("openfda", {}).get("generic_name", []),
-            "brand_name": label.get("openfda", {}).get("brand_name", []),
-        },
-        "flags": flags,
-        "summary": f"{len(flags)} exercise-relevant flag(s) found." if flags
-        else "No exercise-relevant warnings found in this label.",
-        "note": "From the FDA label, not medical advice. Discuss concerns with the client's provider.",
-    })
+    return json.dumps({"drug": drug_name, "flags": flags})
 
 
+def build_class_plan(duration_min: int, level: str = "beginner", conditions: list[str] | None = None) -> str:
+    """Pick exercises, in class order, that fit the time and are safe for the client."""
+    conditions = conditions or []
+    if level not in LEVELS:
+        return json.dumps({"error": f"Unknown level '{level}'. Use one of {LEVELS}."})
+    unknown = [c for c in conditions if c not in CONDITIONS]
+    if unknown:
+        return json.dumps({"error": f"Unknown conditions {unknown}. Use any of {CONDITIONS}."})
 
-def build_class_plan(duration_min, level, equipment, focus, conditions):
-    """ build class exercise sequence"""
+    plan, skipped, total = [], [], 0
+    for name, ex in EXERCISES.items():
+        if LEVELS.index(ex["level"]) > LEVELS.index(level):
+            continue
+        if set(ex["avoid_for"]) & set(conditions):
+            skipped += [name]
+        elif total + ex["minutes"] <= duration_min:
+            plan += [name]
+            total += ex["minutes"]
+
+    return json.dumps({"plan": plan, "total_minutes": total, "skipped_as_unsafe": skipped})
 
 
-def suggest_modification(exercise, reason):
-    """ suggest exercise modification"""
+def suggest_modification(exercise: str) -> str:
+    """Return a safer or easier version of one exercise."""
+    match = next((name for name in EXERCISES if name.lower() == exercise.lower()), None)
+    if not match:
+        return json.dumps({"error": f"Unknown exercise '{exercise}'. Use one of {list(EXERCISES)}."})
 
-
-
-
-
-"""The tools the harness can run, and the JSON that describes them to the model."""
+    ex = EXERCISES[match]
+    return json.dumps({"exercise": match, "modification": ex["modification"], "avoid_for": ex["avoid_for"]})
 
 
 # What the model sees: the "set notes" in the screenplay.
@@ -93,29 +70,58 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "check_medication_exercise_flags",
-            "description": (
-                "Look up one medication's FDA label and flag warnings that matter in a Pilates "
-                "session (dizziness, slowed heart rate, low blood sugar, tendon or bone risks, "
-                "bleeding, drowsiness, muscle pain). Returns each flag with the label excerpt "
-                "that triggered it, a Pilates caution, and conditions to pass to build_class_plan. "
-                "Call once per medication."
-            ),
+            "description": "Check one medication's FDA label for side effects that matter in a Pilates class.",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "drug_name": {
-                        "type": "string",
-                        "description": "One medication, generic or brand name, without dose, e.g. 'metoprolol' or 'Lipitor'.",
-                    },
+                    "drug_name": {"type": "string", "description": "Generic or brand name, e.g. 'metoprolol'"},
                 },
                 "required": ["drug_name"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "build_class_plan",
+            "description": "Build a Pilates mat class that fits the time and skips exercises unsafe for the client's conditions.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "duration_min": {"type": "integer", "description": "Class length in minutes, e.g. 45"},
+                    "level": {"type": "string", "enum": LEVELS, "description": "Client level"},
+                    "conditions": {
+                        "type": "array",
+                        "items": {"type": "string", "enum": CONDITIONS},
+                        "description": "The client's conditions, if any",
+                    },
+                },
+                "required": ["duration_min"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "suggest_modification",
+            "description": "Get a safer or easier version of one Pilates exercise.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "exercise": {"type": "string", "description": f"One of: {', '.join(EXERCISES)}"},
+                },
+                "required": ["exercise"],
             },
         },
     },
 ]
 
 # What the harness runs: tool name -> Python function.
-TOOL_MAP = {"check_medication_exercise_flags": check_medication_exercise_flags}
+TOOL_MAP = {
+    "check_medication_exercise_flags": check_medication_exercise_flags,
+    "build_class_plan": build_class_plan,
+    "suggest_modification": suggest_modification,
+}
 
 
 def run_tool(name: str, args: dict) -> str:
